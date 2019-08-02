@@ -23,17 +23,17 @@ public class Server extends Thread {
         while(serverRunning) {
             try {
                 // listen on port for client connections
-                System.out.println("Listening on port " + serverSocket.getLocalPort());
+                System.out.println("Server:> Listening on port " + serverSocket.getLocalPort());
                 Socket server = serverSocket.accept();
 
                 // accept messages from clients
-                System.out.println(server.getRemoteSocketAddress() + "connected.");
+                System.out.println("Server:> " + server.getRemoteSocketAddress() + " connected.");
                 DataInputStream input = new DataInputStream(server.getInputStream());
 
                 // close the server socket
                 System.out.println(input.readUTF());
                 DataOutputStream output = new DataOutputStream(server.getOutputStream());
-                output.writeUTF("Closing connection to " + server.getLocalSocketAddress());
+                output.writeUTF("Server:> Closing connection to " + server.getLocalSocketAddress());
                 server.close();
 
                 serverRunning = false;

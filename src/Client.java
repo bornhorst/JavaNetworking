@@ -15,9 +15,9 @@ public class Client extends Thread {
 
     // client constructor
     public Client(String server, int port) {
-        this.serverName = server;
-        this.serverPort = port;
-        this.clientRunning = true;
+        serverName = server;
+        serverPort = port;
+        clientRunning = true;
     }
 
     // thread for running the client
@@ -25,22 +25,21 @@ public class Client extends Thread {
         while(clientRunning) {
             try {
                 // connect to a server
-                System.out.println("Connecting to " + this.serverName + " on port " +
-                                    this.serverPort);
-                Socket client = new Socket(this.serverName, this.serverPort);
+                System.out.println("Client:> Connecting to " + serverName + " on port " + serverPort);
+                Socket client = new Socket(this.serverName, serverPort);
 
                 // connection established
-                System.out.println("Connected to " + client.getRemoteSocketAddress());
+                System.out.println("Client:> Connected to " + client.getRemoteSocketAddress());
                 OutputStream outputToServer = client.getOutputStream();
                 DataOutputStream output = new DataOutputStream(outputToServer);
 
                 // send message to server
-                output.writeUTF("Client from " + client.getLocalSocketAddress());
+                output.writeUTF("Client:> Client from " + client.getLocalSocketAddress());
                 InputStream inputFromServer = client.getInputStream();
                 DataInputStream input = new DataInputStream(inputFromServer);
 
                 // receive message from server
-                System.out.println("Server message: " + input.readUTF());
+                System.out.println("Client:> Server message: " + input.readUTF());
 
                 // close connection
                 client.close();
