@@ -12,44 +12,80 @@ public class Client extends Thread {
     private int serverPort;
     // client is running
     private boolean clientRunning;
+    // socket for client connection
+    private Socket clientSocket;
+    // client position
+    private String clientPosition;
+    // client messaging
+    private InputStream input = null;
+    private BufferedReader inputBR = null;
+    private DataOutputStream output = null;
 
     // client constructor
     public Client(String server, int port) {
-        serverName = server;
-        serverPort = port;
-        clientRunning = true;
+        this.serverName = server;
+        this.serverPort = port;
+        this.clientRunning = true;
     }
 
     // thread for running the client
+    @Override
     public void run() {
+        try {
+            // connect to the server
+            clientConnect();
+            input = this.clientSocket.getInputStream();
+            inputBR = new BufferedReader(new InputStreamReader(input));
+            output = new DataOutputStream(this.clientSocket.getOutputStream());
+        } catch(IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
         while(clientRunning) {
             try {
-                // connect to a server
-                System.out.println("Client:> Connecting to " + serverName + " on port " + serverPort);
-                Socket client = new Socket(this.serverName, serverPort);
-
-                // connection established
-                System.out.println("Client:> Connected to " + client.getRemoteSocketAddress());
-                OutputStream outputToServer = client.getOutputStream();
-                DataOutputStream output = new DataOutputStream(outputToServer);
-
-                // send message to server
-                output.writeUTF("Client:> Client from " + client.getLocalSocketAddress());
-                InputStream inputFromServer = client.getInputStream();
-                DataInputStream input = new DataInputStream(inputFromServer);
+                // initial state
+                clientSend("Hello");
 
                 // receive message from server
-                System.out.println("Client:> Server message: " + input.readUTF());
-
-                // close connection
-                client.close();
-
-                clientRunning = false;
+                if(clientReceive().contains("Welcome")) {
+                    clientSend("Exit");
+                    clientRunning = false;
+                }
 
             } catch(IOException e) {
                 e.printStackTrace();
+            } finally {
+                try {
+                    this.clientSocket.close();
+                } catch(IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
+    }
+
+    private String clientReceive() throws IOException {
+        String inputLine = inputBR.readLine();
+        System.out.println("Read from Server: " + inputLine);
+        this.clientPosition = inputLine;
+        this.clientPosition = clientPosition.replaceAll("[^0-9]+", "");
+        return inputLine;
+    }
+
+    private void clientSend(String message) throws IOException {
+        this.output.writeBytes(message + "\n");
+        this.output.flush();
+        if(this.clientPosition == null)
+            System.out.println("Client:> " + message);
+        else
+            System.out.println("Client" + this.clientPosition + ":> " + message);
+    }
+
+    private void clientConnect() throws IOException {
+        // connect to a server
+        System.out.println("Client:> Connecting to " + serverName + " on port " + serverPort);
+        this.clientSocket = new Socket(serverName, serverPort);
     }
 
 }

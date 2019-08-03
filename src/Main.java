@@ -4,6 +4,8 @@ public class Main {
 
     public static void main(String[] args) {
 
+
+
         // server parameters
         String serverName = "localhost";
         int serverPort = 6666;
@@ -13,8 +15,11 @@ public class Main {
             Thread serverThread = new Server(serverPort);
             serverThread.start();
 
-            Thread clientThread = new Client(serverName, serverPort);
-            clientThread.start();
+            Thread clientThread1 = new Client(serverName, serverPort);
+            clientThread1.start();
+
+            Thread clientThread2 = new Client(serverName, serverPort);
+            clientThread2.start();
 
         } catch(IOException e) {
             e.printStackTrace();

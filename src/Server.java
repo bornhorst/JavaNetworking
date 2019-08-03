@@ -1,5 +1,6 @@
 import java.net.*;
 import java.io.*;
+import java.util.concurrent.Semaphore;
 
 /*
 Server Class for Socket Communication
@@ -10,42 +11,48 @@ public class Server extends Thread {
     private ServerSocket serverSocket;
     // server is running
     private boolean serverRunning;
+    // total clients
+    private int clientConnections = 0;
+
+    // constant
+    static private final int MAX_CLIENTS = 2;
+    static private Semaphore semaphore = new Semaphore(MAX_CLIENTS);
 
     // class constructor for setting up the server
     public Server(int port) throws IOException {
         serverSocket = new ServerSocket(port);
-        serverSocket.setSoTimeout(10000);
         serverRunning = true;
     }
 
     // thread for running the server
+    @Override
     public void run() {
+        // listen on port for client connections
+        System.out.println("Server:> Listening on port " + serverSocket.getLocalPort());
         while(serverRunning) {
             try {
-                // listen on port for client connections
-                System.out.println("Server:> Listening on port " + serverSocket.getLocalPort());
-                Socket server = serverSocket.accept();
+                // listen for clients to connect
+                if(clientConnections < MAX_CLIENTS)
+                    serverAccept();
+                else {
+                    serverSocket.close();
+                    break;
+                }
 
-                // accept messages from clients
-                System.out.println("Server:> " + server.getRemoteSocketAddress() + " connected.");
-                DataInputStream input = new DataInputStream(server.getInputStream());
-
-                // close the server socket
-                System.out.println(input.readUTF());
-                DataOutputStream output = new DataOutputStream(server.getOutputStream());
-                output.writeUTF("Server:> Closing connection to " + server.getLocalSocketAddress());
-                server.close();
-
-                serverRunning = false;
-
-            } catch(SocketTimeoutException s) {
-                System.out.println("Timeout on Socket!");
-                break;
             } catch(IOException e) {
                 e.printStackTrace();
                 break;
             }
         }
+    }
+
+    private void serverAccept() throws IOException {
+        Socket clientSocket;
+        clientSocket = serverSocket.accept();
+        this.clientConnections += 1;
+        System.out.println("Clients connected: " + clientConnections);
+        Thread client = new EchoThread(clientSocket, semaphore, this.clientConnections);
+        client.start();
     }
 
 }
